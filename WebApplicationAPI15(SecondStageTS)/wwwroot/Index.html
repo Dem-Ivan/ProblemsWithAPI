@@ -1,0 +1,218 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Афиша объявлений</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.0/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+    <h2>Список Объявлений</h2>    
+    <form name="announcementForm">
+        <input type="hidden" name="id" value="0" />
+        <div class="form-group col-md-5">
+            <label for="name">Имя:</label>
+            <input class="form-control" name="name" />
+        </div>
+        <div class="form-group col-md-5">
+            <label for="name">Текст:</label>
+            <input class="form-control" name="Text" />
+        </div>
+        <div class="form-group col-md-5">
+            <label for="name">Image:</label>
+            <input class="form-control" name="Image" />
+        </div>
+        <div class="panel-body">
+            <button type="submit" id="submit" class="btn btn-primary">Сохранить</button>
+            <a id="reset" class="btn btn-primary">Сбросить</a>
+        </div>
+    </form>
+    <table class="table table-condensed table-striped  col-md-6">
+        <thead><tr><th>Id</th><th>№</th><th>Имя</th><th>Текст</th><th>Image</th><th>Rating</th><th></th></tr></thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <script>
+        // Получение всех объявдений (пользователей GetUsers | Работает
+        async function GetAnnouncements() {
+            // отправляет запрос и получаем ответ
+            const response = await fetch("/api/announcement", {
+                method: "GET",
+                headers: { "Accept": "application/json" }
+            });
+            // если запрос прошел нормально
+            if (response.ok === true) {
+                // получаем данные
+                const announcements = await response.json();
+                let rows = document.querySelector("tbody");
+                announcements.forEach(announcement => {
+                    // добавляем полученные элементы в таблицу
+                    rows.append(row(announcement));
+                });
+            }
+        }
+        // Получение одного пользователя| Работает, проблема только в строке name
+        async function GetAnnouncement(id) {
+            const response = await fetch("/api/announcement/" + id, {
+                method: "GET",
+                headers: { "Accept": "application/json" }
+            });
+            if (response.ok === true) {
+                const announcement = await response.json();
+                const form = document.forms["announcementForm"];
+                form.elements["id"].value = announcement.id;
+               // form.elements["name"].value = announcement.user.Name;//не работает
+                form.elements["Text"].value = announcement.Text;
+				form.elements["Image"].value = announcement.Image;
+
+				console.log(announcement.id);
+				console.log("announcement.Text = " + announcement.Text);
+                console.log("announcement = " + announcement["Text"]);
+            }
+        }
+        // Добавление объявления (пользователя CreateUser| Работает
+        async function CreateAnnouncement(userName, announcementText, announcementImage) {
+            console.log("I am in method POST");
+			console.log("userName = " + userName);
+
+            const response = await fetch("api/announcement", {
+                method: "POST",
+                headers: { "Accept": "application/json", "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    user: { name: userName },
+                    Text: announcementText,
+                    Image: announcementImage
+                })
+            });
+            if (response.ok === true) {
+                const announcement = await response.json();
+                reset();
+                document.querySelector("tbody").append(row(announcement));
+            }
+        }
+        // Изменение объявления (пользователя EditUser
+        async function EditAnnouncement(announcementId, userName, announcementText, announcementImage) {
+			console.log("I am in method PUT");
+			console.log("userName = " + userName);
+
+			const response = await fetch("api/announcement", {
+                method: "PUT",
+                headers: { "Accept": "application/json", "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: parseInt(announcementId, 10),// parseInt
+                    user: { name: userName },
+                    Text: announcementText,
+                    Image: announcementImage
+                })
+            });
+            if (response.ok === true) {
+                const announcement = await response.json();
+                reset();
+                document.querySelector("tr[data-rowid='" + announcement.id + "']").replaceWith(row(announcement));
+			}            
+        }
+        // Удаление объявления ( пользователя
+        async function DeleteAnnouncement(id) {
+             const response = await fetch("/api/announcement/" + id,{
+                method: "DELETE",
+                headers: { "Accept": "application/json" }
+            });
+            if (response.ok === true) {
+                const announcement = await response.json();
+                document.querySelector("tr[data-rowid='" + announcement.id + "']").remove();
+			}
+            console.log("DELETE id = " + id);
+        }
+
+        // сброс формы
+        function reset() {
+            const form = document.forms["announcementForm"];
+            form.reset();
+            form.elements["id"].value = 0;
+        }
+        // создание строки для таблицы | Работает, за исключением значений полей
+        function row(announcement) {
+
+            const tr = document.createElement("tr");
+            tr.setAttribute("data-rowid", announcement.id);
+
+            const idTd = document.createElement("td");
+            idTd.append(announcement.id);
+            tr.append(idTd);
+
+            const OrNumTd = document.createElement("td");
+            OrNumTd.append(announcement.OrderNumber);
+            tr.append(OrNumTd);
+
+            //const UsNameTd = document.createElement("td");
+            //UsNameTd.append(announcement.user.Name);
+            //tr.append(UsNameTd);
+
+            const textTd = document.createElement("td");
+            textTd.append(announcement.Text);
+            tr.append(textTd);
+
+            const ImageTd = document.createElement("td");
+            ImageTd.append(announcement.Image);
+            tr.append(ImageTd);
+
+            const RatingTd = document.createElement("td");
+            RatingTd.append(announcement.Rating);
+            tr.append(RatingTd);
+
+            const linksTd = document.createElement("td");
+
+            const editLink = document.createElement("a");
+            editLink.setAttribute("data-id", announcement.id);
+            editLink.setAttribute("style", "cursor:pointer;padding:15px;");
+            editLink.append("Изменить");
+            editLink.addEventListener("click", e => {
+
+                e.preventDefault();
+                GetAnnouncement(announcement.id);
+            });
+            linksTd.append(editLink);
+
+            const removeLink = document.createElement("a");
+            removeLink.setAttribute("data-id", announcement.id);
+            removeLink.setAttribute("style", "cursor:pointer;padding:15px;");
+            removeLink.append("Удалить");
+            removeLink.addEventListener("click", e => {
+
+                e.preventDefault();
+                DeleteAnnouncement(announcement.id);
+            });
+
+            linksTd.append(removeLink);
+            tr.appendChild(linksTd);
+
+            return tr;
+        }
+        // сброс значений формы
+        document.getElementById("reset").click(function (e) {
+
+            e.preventDefault();
+            reset();
+        })
+
+        // отправка формы | Работает
+        document.forms["announcementForm"].addEventListener("submit", e => {
+            e.preventDefault();
+            const form = document.forms["announcementForm"];
+            const id = form.elements["id"].value;
+            const userName = form.elements["name"].value;
+            const announcementText = form.elements["Text"].value;
+            const announcementImage = form.elements["Image"].value;
+            if (id == 0)
+                CreateAnnouncement(userName, announcementText, announcementImage);
+            else
+                EditAnnouncement(id, userName, announcementText, announcementImage);
+        });
+
+        // загрузка пользователей
+        GetAnnouncements();
+
+    </script>
+</body>
+</html>
