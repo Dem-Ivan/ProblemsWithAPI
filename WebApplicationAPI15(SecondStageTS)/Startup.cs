@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -25,7 +26,7 @@ namespace WebApplicationAPI15_SecondStageTS_
 			string connection = Configuration.GetConnectionString("DefaultConnection");
 			services.AddDbContext<ApplicationContext>(options => options.UseNpgsql(connection));
 			services.AddControllers();
-
+			services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 			services.AddSwaggerGen(c => c.SwaggerDoc("v1",new OpenApiInfo { Title = "My API", Version = "v1"}));
 		}
 		public void Configure(IApplicationBuilder app)

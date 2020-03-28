@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using WebApplicationAPI15_SecondStageTS_.dto;
 using WebApplicationAPI15_SecondStageTS_.Models;
 
 namespace WebApplicationAPI15_SecondStageTS_.Controllers
@@ -13,44 +15,48 @@ namespace WebApplicationAPI15_SecondStageTS_.Controllers
     [ApiController]
     public class AnnouncementController : ControllerBase
     {
-        ApplicationContext db;
-        public AnnouncementController(ApplicationContext context)
-        {
-             db = context;
+        ApplicationContext _db;
+        private readonly IMapper _mapper;
 
-            if (!db.Announcements.Any())
+        public AnnouncementController(ApplicationContext context, IMapper mapper)
+        {
+            _db = context;
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            if (!_db.Announcements.Any())
             {
-                db.Announcements.Add(
+                _db.Announcements.Add(
                     new Announcement
                     {
                         OrderNumber = 1,
-                        user = new User { Name = "Tom" },
+                        user = new User {Name = "Tom"},
                         Text = "пойду добровольно в армию!",
                         CreationDate = DateTime.Now,
                         Rating = 3
                     });
-                db.SaveChanges();
+                _db.SaveChanges();
             }
         }
 
         //GET api/announcements
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Announcement>>> Get()
+        public async Task<ActionResult<IEnumerable<AnnouncementDTO>>> Get()
         {
-            return await db.Announcements.ToListAsync();
+            var query = _db.Announcements;
+            var announcements = await _mapper.ProjectTo<AnnouncementDTO>(query).ToListAsync();
+            return announcements;
         }
 
         //GET api/announcement/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Announcement>> Get(int id)
+        public async Task<ActionResult<AnnouncementDTO>> Get(int id)
         {
-            Announcement announcement = await db.Announcements.Include(u => u.user).FirstOrDefaultAsync(an => an.Id == id); 
-            //Announcement announcement = await db.Announcements.FirstOrDefaultAsync(an => an.Id == id);
+            var query = _db.Announcements.Where(an => an.Id == id);
+            var announcement = await _mapper.ProjectTo<AnnouncementDTO>(query).FirstOrDefaultAsync();
+            
             if (announcement == null)
             {
                 return NotFound();
             }
-            //return new ObjectResult(announcement);
             return Ok(announcement);
         }
 
@@ -63,10 +69,10 @@ namespace WebApplicationAPI15_SecondStageTS_.Controllers
                 return BadRequest();
             }
 
-            announcement.OrderNumber = db.Announcements.Max(e => e.OrderNumber) + 1;
+            announcement.OrderNumber = _db.Announcements.Max(e => e.OrderNumber) + 1;
             announcement.CreationDate = DateTime.Now;
-            db.Announcements.Add(announcement);
-            await db.SaveChangesAsync();
+            _db.Announcements.Add(announcement);
+            await _db.SaveChangesAsync();
             return Ok(announcement);
         }
 
@@ -78,13 +84,14 @@ namespace WebApplicationAPI15_SecondStageTS_.Controllers
             {
                 return BadRequest();
             }
-            if (!db.Announcements.Any(an => an.Id == announcement.Id))
+
+            if (!_db.Announcements.Any(an => an.Id == announcement.Id))
             {
                 return NotFound();
             }
 
-            db.Update(announcement);
-            await db.SaveChangesAsync();
+            _db.Update(announcement);
+            await _db.SaveChangesAsync();
             return Ok(announcement);
         }
 
@@ -92,14 +99,14 @@ namespace WebApplicationAPI15_SecondStageTS_.Controllers
         [HttpDelete("{id}")]
         public async Task<ActionResult<Announcement>> DeleteAnnouncement(int id)
         {
-            Announcement announcement = db.Announcements.Include(an=>an.user).FirstOrDefault(an => an.Id == id);
+            Announcement announcement = _db.Announcements.Include(an => an.user).FirstOrDefault(an => an.Id == id);
             if (announcement == null)
             {
                 return NotFound();
             }
 
-            db.Announcements.Remove(announcement);
-            await db.SaveChangesAsync();
+            _db.Announcements.Remove(announcement);
+            await _db.SaveChangesAsync();
             return Ok(announcement);
         }
 
