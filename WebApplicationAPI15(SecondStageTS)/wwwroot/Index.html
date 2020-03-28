@@ -39,7 +39,7 @@
             // отправляет запрос и получаем ответ
             const response = await fetch("/api/announcement", {
                 method: "GET",
-                headers: { "Accept": "application/json" }
+                headers: { "Accept": "application/json", "Content-Type": "application/json" }
             });
             // если запрос прошел нормально
             if (response.ok === true) {
@@ -56,19 +56,19 @@
         async function GetAnnouncement(id) {
             const response = await fetch("/api/announcement/" + id, {
                 method: "GET",
-                headers: { "Accept": "application/json" }
+                headers: { "Accept": "application/json", "Content-Type": "application/json" }
             });
             if (response.ok === true) {
                 const announcement = await response.json();
                 const form = document.forms["announcementForm"];
                 form.elements["id"].value = announcement.id;
                // form.elements["name"].value = announcement.user.Name;//не работает
-                form.elements["Text"].value = announcement.Text;
-				form.elements["Image"].value = announcement.Image;
+                form.elements["Text"].value = announcement.text;
+				form.elements["Image"].value = announcement.image;
 
 				console.log(announcement.id);
-				console.log("announcement.Text = " + announcement.Text);
-                console.log("announcement = " + announcement["Text"]);
+				console.log("announcement.user.name = " + announcement.user.name);
+                console.log("announcement = " + announcement["text"]);
             }
         }
         // Добавление объявления (пользователя CreateUser| Работает
@@ -116,7 +116,7 @@
         async function DeleteAnnouncement(id) {
              const response = await fetch("/api/announcement/" + id,{
                 method: "DELETE",
-                headers: { "Accept": "application/json" }
+                headers: { "Accept": "application/json", "Content-Type": "application/json" }
             });
             if (response.ok === true) {
                 const announcement = await response.json();
@@ -142,7 +142,7 @@
             tr.append(idTd);
 
             const OrNumTd = document.createElement("td");
-            OrNumTd.append(announcement.OrderNumber);
+            OrNumTd.append(announcement.orderNumber);
             tr.append(OrNumTd);
 
             //const UsNameTd = document.createElement("td");
@@ -150,15 +150,15 @@
             //tr.append(UsNameTd);
 
             const textTd = document.createElement("td");
-            textTd.append(announcement.Text);
+            textTd.append(announcement.text);
             tr.append(textTd);
 
             const ImageTd = document.createElement("td");
-            ImageTd.append(announcement.Image);
+            ImageTd.append(announcement.image);
             tr.append(ImageTd);
 
             const RatingTd = document.createElement("td");
-            RatingTd.append(announcement.Rating);
+            RatingTd.append(announcement.rating);
             tr.append(RatingTd);
 
             const linksTd = document.createElement("td");

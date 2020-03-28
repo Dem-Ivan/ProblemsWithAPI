@@ -44,7 +44,8 @@ namespace WebApplicationAPI15_SecondStageTS_.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Announcement>> Get(int id)
         {
-            Announcement announcement = await db.Announcements.FirstOrDefaultAsync(an => an.Id == id);
+            Announcement announcement = await db.Announcements.Include(u => u.user).FirstOrDefaultAsync(an => an.Id == id); 
+            //Announcement announcement = await db.Announcements.FirstOrDefaultAsync(an => an.Id == id);
             if (announcement == null)
             {
                 return NotFound();
@@ -54,6 +55,7 @@ namespace WebApplicationAPI15_SecondStageTS_.Controllers
         }
 
         //POST api/announcement
+        [HttpPost]
         public async Task<ActionResult<Announcement>> Post(Announcement announcement)
         {
             if (announcement == null)
@@ -87,10 +89,10 @@ namespace WebApplicationAPI15_SecondStageTS_.Controllers
         }
 
         //DELETE api/announcement/5
-        [HttpDelete]
+        [HttpDelete("{id}")]
         public async Task<ActionResult<Announcement>> DeleteAnnouncement(int id)
         {
-            Announcement announcement = db.Announcements.FirstOrDefault(an => an.Id == id);
+            Announcement announcement = db.Announcements.Include(an=>an.user).FirstOrDefault(an => an.Id == id);
             if (announcement == null)
             {
                 return NotFound();
@@ -102,18 +104,18 @@ namespace WebApplicationAPI15_SecondStageTS_.Controllers
         }
 
         //DELETE api/user/5
-        [HttpDelete]
-        public async Task<ActionResult<User>> DeleteUser(int id)
-        {
-            User user = db.Users.FirstOrDefault(u => u.Id == id);
-            if (user == null)
-            {
-                return NotFound();
-            }
+        //[HttpDelete]
+        //public async Task<ActionResult<User>> DeleteUser(int id)
+        //{
+        //    User user = db.Users.FirstOrDefault(u => u.Id == id);
+        //    if (user == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            db.Users.Remove(user);
-            await db.SaveChangesAsync();
-            return Ok(user);
-        }
+        //    db.Users.Remove(user);
+        //    await db.SaveChangesAsync();
+        //    return Ok(user);
+        //}
     }
 }
